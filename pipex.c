@@ -6,7 +6,7 @@
 /*   By: mbaioumy <mbaioumy@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/23 01:13:26 by mbaioumy          #+#    #+#             */
-/*   Updated: 2022/02/27 19:41:25 by mbaioumy         ###   ########.fr       */
+/*   Updated: 2022/03/02 13:12:28 by mbaioumy         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,91 +16,82 @@
 #include<errno.h>
 #include<sys/types.h>
 #include<sys/wait.h>
-#include "libft.h"
-
-int     ft_strcmp(char *s1, char *s2, int n)
-{
-    int i = 0;
-    while(s1[i] == s2[i] && s1[i] && s2[i] && i < n - 1)
-        i++;
-    return (s1[i] - s2[i]);
-}
-
-char	*findthewae(char **str)
-{
-    int i = 0;
-    while(str[i])
-    {
-        if(ft_strcmp(str[i], "PATH=", 5) == 0)
-            return (str[i] + 5);
-        i++;
-    }
-    return ("zbi");
-}
+#include "pipex.h"
 
 void	execute(char **env, char *cmd)
 {
 	char	*path;
-	char	**cmdPaths;
+	char	**cmdpaths;
 	int		i;
 	char	*arg;
 	char	**cmda;
 
 	i = -1;
 	path = findthewae(env);
-	cmdPaths = ft_split(path, ':');
+	if (!path)
+		return (perror("PATH_Error"));
+	cmdpaths = ft_split(path, ':');
 	cmda = ft_split(cmd, ' ');
-	while (cmdPaths[++i])
+	while (cmdpaths[++i])
 	{
-		arg = ft_strjoin(cmdPaths[i], "/");
+		arg = ft_strjoin(cmdpaths[i], "/");
 		arg = ft_strjoin(arg, cmda[0]);
-		execve(arg, cmda, env);
+		if (access(arg, F_OK) == 0)
+			execve(arg, cmda, env);
 	}
+	perror("./pipex");
 }
 
-void	pipex(int file1, int file2, char *cmd1, char *cmd2, char **env)
+void	first_child_process(int *fd, char **argv, char **env)
 {
-	int fd[2];
-	int pid1;
+	dup2(fd[1], STDOUT_FILENO);
+	dup2(argv[1], 0);
+	close(fd[0]);
+	close(fd[1]);
+	execute(env, argv[2]);
+}
 
+void	second_child_process(int *fd, char **argv, char **env)
+{
+	dup2(fd[0], STDIN_FILENO);
+	dup2(argv[4], 1);
+	close(fd[0]);
+	close(fd[1]);
+	execute(env, argv[3]);
+}
+
+void	pipex(char **argv, char **env)
+{
+	int	fd[2];
+	int	pid1;
+	int	pid2;
+	int	file1;
+	int	file2;
+
+	file1 = open(argv[1], O_RDONLY);
+	file2 = open(argv[4], O_CREAT | O_RDWR | O_TRUNC, 0777);
+	if (file1 < 0 || file2 < 0)
+		return (-1);
 	if (pipe(fd) < 0)
 		return ;
 	pid1 = fork();
 	if (pid1 == -1)
 		return ;
 	if (pid1 == 0)
-	{
-		dup2(fd[1], STDOUT_FILENO);
-		close(fd[0]);
-		close(fd[1]);
-		execute(env, cmd1);
-	}
-	close(file1);
-	int pid2 = fork();
+		first_child_process(fd, argv, env);
+	pid2 = fork();
 	if (pid2 < 0)
 		return ;
 	if (pid2 == 0)
-	{
-		dup2(fd[0], STDIN_FILENO);
-		close(fd[0]);
-		close(fd[1]);
-		execute(env, cmd2);
-	}
-	close(file2);
+		second_child_process(fd, argv, env);
 	close(fd[0]);
 	close(fd[1]);
-	wait(0);
+	waitpid(pid1, NULL, NULL);
+	waitpid(pid2, NULL, NULL);
 }
 
-int main(int argc, char **argv, char **env)
+int	main(int argc, char **argv, char **env)
 {
-	int file1, file2;
-
-	file1 = open(argv[1], O_RDONLY);
-	file2 = open(argv[4], O_CREAT | O_RDWR, 0777);
-	if (file1 < 0 || file2 < 0)
-		return (-1);
-	pipex(file1, file2, argv[2], argv[3], env);
-	//system("a out leaks");
+	pipex(argv, env);
 	return (0);
 }
