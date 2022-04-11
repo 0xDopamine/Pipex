@@ -6,7 +6,7 @@
 /*   By: mbaioumy <mbaioumy@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/28 21:37:05 by mbaioumy          #+#    #+#             */
-/*   Updated: 2022/03/23 15:52:18 by mbaioumy         ###   ########.fr       */
+/*   Updated: 2022/04/06 22:32:58 by mbaioumy         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,20 +53,23 @@ char	*findthewae(char **str)
 	return (0);
 }
 
-void	file_protection(t_data data, char **argv, int argc)
+int	file_protection(t_data data, char **argv, int argc)
 {
 	if (data.file1 < 0)
 	{	
 		write(2, "zsh: no such file or directory: ", 32);
 		write(2, argv[1], ft_strlen(argv[1]));
 		write(2, "\n", 1);
+		return (0);
 	}
 	else if (data.file2 < 0)
 	{
 		write(2, "zsh: no such file or directory: ", 32);
 		write(2, argv[argc - 1], ft_strlen(argv[argc - 1]));
 		write(2, "\n", 1);
+		return (0);
 	}
+	return (1);
 }
 
 void	error_handling(char *cmd)

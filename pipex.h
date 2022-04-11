@@ -6,7 +6,7 @@
 /*   By: mbaioumy <mbaioumy@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2022/02/28 21:37:56 by mbaioumy          #+#    #+#             */
-/*   Updated: 2022/03/23 16:15:10 by mbaioumy         ###   ########.fr       */
+/*   Updated: 2022/04/06 22:33:31 by mbaioumy         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,7 @@ char	**splitting(char const *s, char c, int len, char **str);
 char	**ft_split(char const *s, char c);
 int		ft_strncmp(char *s1, char *s2, unsigned int n);
 void	*ft_calloc(size_t count, size_t size);
-void	file_protection(t_data data, char **argv, int argc);
+int		file_protection(t_data data, char **argv, int argc);
 void	error_handling(char *cmd);
 
 #endif
